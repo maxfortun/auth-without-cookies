@@ -5,12 +5,17 @@ const auth_header_actions = {
 };
 
 const auth_header = url => {
-	// loop and pop segments until something is found
-	let header = auth_headers[url];
-	if(header) {
-		return header;
-	}
-	return null;
+	const segments = url.split('/');
+	do {
+		const key = segments.join('/');
+		let header = auth_headers[key];
+		console.log('auth_header:', key);
+		if(header) {
+			return header;
+		}
+		segments.pop();
+	} while(segments.length);
+	return auth_headers[''];
 };
 
 addEventListener('install', async event => {
@@ -25,23 +30,25 @@ addEventListener('activate', async event => {
 
 addEventListener('fetch', async event => {
 	console.log('fetch:', event);
-	const options = {};
 
 	const auth_header_value = auth_header(event.request.url);
-	if(auth_header_value) {
-		if(!options.headers) {
-			options.headers = {};
-		}
-		options.headers.Authorization = auth_header_value;
-	}
-
-	const response = await fetch(event.request, options);
-	console.log('fetched:', event, response);
-
-	if (!response || response.status !== 200 || response.type !== 'basic') {
+	if(!auth_header_value) {
+		const response = fetch(event.request);
+		console.log('fetched no auth:', event.request, response);
 		return response;
 	}
 
+	const request = new Request(event.request, {
+		method: event.request.method,
+		headers: Object.assign({}, event.request.headers, {
+			Authorization: auth_header_value
+		}),
+		mode: 'cors',
+		credentials: event.request.credentials
+	});
+
+	const response = await fetch(request);
+	console.log('fetched auth:', request, response);
 	return response;
 });
 
