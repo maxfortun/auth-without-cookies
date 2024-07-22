@@ -4,11 +4,15 @@ if ('serviceWorker' in navigator) {
 			const reg = await navigator.serviceWorker.register('./auth-sw.js');
 			console.info('ServiceWorker registration successful:', reg);
 
-			const set = (url, header) => {
-				authSW.reg.active.postMessage({ action: 'set', url, header });
+			const set = async (url, header) => {
+				return new Promise((resolve, reject) => {
+					const messageChannel = new MessageChannel();
+					messageChannel.port1.addEventListener('message', resolve);
+					authSW.reg.active.postMessage({ action: 'set', url, header }, [messageChannel.port2]);
+				});
 			};
 
-			const del = (url) => {
+			const del = async (url) => {
 				authSW.reg.active.postMessage({ action: 'del', url });
 			};
 

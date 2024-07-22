@@ -19,7 +19,7 @@
 
 			window.addEventListener('authSWLoaded', async event => {
 				console.log('authSWLoaded:', event);
-				window.authSW.set('', auth_header());
+				await window.authSW.set('', auth_header());
 				loadScript({src: 'test.js'});
 			});
 		</script>

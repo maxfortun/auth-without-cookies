@@ -47,11 +47,14 @@ addEventListener('fetch', async event => {
 
 addEventListener("message", async event => {
 	console.log('message:', event);
+	const messagePort = event.ports?.[0];
 	const action = auth_header_actions[event.data.action];
 	if(!action) {
+		messagePort.postMessage({status: 'unhandled', data: event.data});
 		return;
 	}
 	action(event.data);
+	messagePort.postMessage({status: 'handled', data: event.data});
 });
 
 
