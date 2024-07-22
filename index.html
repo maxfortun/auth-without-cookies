@@ -20,7 +20,7 @@
 			window.addEventListener('authSWLoaded', async event => {
 				console.log('authSWLoaded:', event);
 				window.authSW.set('', auth_header());
-				loadScript('test.js')
+				loadScript({src: 'test.js'});
 			});
 		</script>
 	</head>
