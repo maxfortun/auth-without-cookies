@@ -1,0 +1,29 @@
+<html>
+	<head>
+		<title>Authorization with ServiceWorker</title>
+		<script src="auth-sw-reg.js"></script>
+		<script>
+			const auth_header = () => {
+				return 'Bearer abcdef';
+			};
+
+			async function loadScript(options) {
+				return new Promise((resolve, reject) => {
+					const script = document.createElement('script');
+					Object.assign(script, options);
+					script.addEventListener('load', resolve);
+					script.addEventListener('error', reject);
+					document.body.appendChild(script);
+				});
+			}
+
+			window.addEventListener('authSWLoaded', async event => {
+				console.log('authSWLoaded:', event);
+				window.authSW.set('', auth_header());
+				loadScript('test.js')
+			});
+		</script>
+	</head>
+	<body>
+	</body>
+</html>
