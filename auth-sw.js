@@ -1,6 +1,16 @@
-const auth_header_map = {};
+const auth_headers = {};
+const auth_header_actions = {
+	set: (data) => auth_headers[data.url] = data.header,
+	del: (data) => delete auth_headers[data.url]
+};
 
 const auth_header = url => {
+	// loop and pop segments until something is found
+	let header = auth_headers[url];
+	if(header) {
+		return header;
+	}
+	return null;
 };
 
 addEventListener('install', async event => {
@@ -37,6 +47,11 @@ addEventListener('fetch', async event => {
 
 addEventListener("message", async event => {
 	console.log('message:', event);
+	const action = auth_header_actions[event.data.action];
+	if(!action) {
+		return;
+	}
+	action(event.data);
 });
 
 
