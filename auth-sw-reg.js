@@ -7,7 +7,10 @@ if ('serviceWorker' in navigator) {
 			const set = async (url, header) => {
 				return new Promise((resolve, reject) => {
 					const messageChannel = new MessageChannel();
-					messageChannel.port1.addEventListener('message', resolve);
+					messageChannel.port1.onmessage = event => {
+						console.log('messageChannel:', event);
+						resolve(event.data);
+					};
 					authSW.reg.active.postMessage({ action: 'set', url, header }, [messageChannel.port2]);
 				});
 			};
