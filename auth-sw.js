@@ -18,47 +18,49 @@ const auth_header = url => {
 	return auth_headers[''];
 };
 
-addEventListener('install', async event => {
+addEventListener('install', event => {
   console.log('install:', event);
   event.waitUntil(skipWaiting());
 });
 
-addEventListener('activate', async event => {
+addEventListener('activate', event => {
   console.log('activate:', event);
   event.waitUntil(clients.claim());
 });
 
-addEventListener('fetch', async event => {
+addEventListener('fetch', event => {
 	console.log('fetch:', event);
 
-	if(event.request.headers.Authorization) {
-		const response = fetch(event.request);
-		console.log('fetched existing auth:', event.request, response);
-		return response;
-	}
-
-	const auth_header_value = auth_header(event.request.url);
-	console.log('auth_header_value:', auth_header_value);
-	if(!auth_header_value) {
-		const response = fetch(event.request);
-		console.log('fetched no auth:', event.request, response);
-		return response;
-	}
-
-	const request = new Request(event.request, {
-		mode: 'cors',
-		credentials: 'include',
-		headers: {
-			Authorization: auth_header_value
+	event.respondWith((async () => {
+		if(event.request.headers.Authorization) {
+			const response = fetch(event.request);
+			console.log('fetched existing auth:', event.request, response);
+			return response;
 		}
-	});
-
-	const response = await fetch(request);
-	console.log('fetched auth:', request, response);
-	return response;
+	
+		const auth_header_value = auth_header(event.request.url);
+		console.log('auth_header_value:', auth_header_value);
+		if(!auth_header_value) {
+			const response = fetch(event.request);
+			console.log('fetched no auth:', event.request, response);
+			return response;
+		}
+	
+		const request = new Request(event.request, {
+			mode: 'cors',
+			credentials: 'include',
+			headers: {
+				Authorization: auth_header_value
+			}
+		});
+	
+		const response = await fetch(request);
+		console.log('fetched auth:', request, response);
+		return response;
+	})());
 });
 
-addEventListener("message", async event => {
+addEventListener("message", event => {
 	console.log('message:', event);
 	const messagePort = event.ports?.[0];
 	const action = auth_header_actions[event.data.action];
