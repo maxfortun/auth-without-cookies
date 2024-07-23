@@ -21,7 +21,7 @@ For our purposes we can think of a Service Worker as a proxy for ALL the network
 We define a `fetch event` listener in a separate file [auth-sw.js](auth-sw.js), which will intercept the fetch request, add Authroization where needed, and return the response.   
 ```javascript
 addEventListener('fetch', async event => {
-	// If we already have the Authorization header, no need to do anything else.
+  // If we already have the Authorization header, no need to do anything else.
   if(event.request.headers.Authorization) {
     return fetch(event.request);
   }
