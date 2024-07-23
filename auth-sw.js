@@ -31,6 +31,12 @@ addEventListener('activate', async event => {
 addEventListener('fetch', async event => {
 	console.log('fetch:', event);
 
+	if(event.request.headers.Authorization) {
+		const response = fetch(event.request);
+		console.log('fetched existing auth:', event.request, response);
+		return response;
+	}
+
 	const auth_header_value = auth_header(event.request.url);
 	if(!auth_header_value) {
 		const response = fetch(event.request);
