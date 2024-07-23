@@ -18,7 +18,7 @@ For our purposes we can think of a Service Worker as a proxy for ALL the network
 
 
 ### Third stop: How does the service worker proxy?
-We define a `fetch event` listener in a separate file `auth-sw.js`, which will intercept the fetch request, add Authroization where needed, and return the response.   
+We define a `fetch event` listener in a separate file [auth-sw.js](auth-sw.js), which will intercept the fetch request, add Authroization where needed, and return the response.   
 ```javascript
 addEventListener('fetch', async event => {
 	// If we already have the Authorization header, no need to do anything else.
@@ -70,7 +70,7 @@ This is the simple part. We register the service worker file with th navigator:
 ```javascript
 const registration = await navigator.serviceWorker.register('./auth-sw.js');
 ```
-That's all there is to it. This will load the service worker. We could do it in an inline `<script>` tag, but if we want it to be reusable, let's put our code in a separate file `auth-sw-reg.js` and load it via:
+That's all there is to it. This will load the service worker. We could do it in an inline `<script>` tag, but if we want it to be reusable, let's put our code in a separate file [auth-sw-reg.js](auth-sw-reg.js) and load it via:
 ```html
 <script src="auth-sw-reg.js" />
 ```
@@ -163,8 +163,7 @@ addEventListener("message", async event => {
 We now have everything that we need to put it all together, at the next stop.
 
 ### Seventh stop: putting it all together
-
-We need to include the service worker:
+In our [app](index.html) we need to include the service worker:
 ```html
 <script src="auth-sw-reg.js"/>
 ```
