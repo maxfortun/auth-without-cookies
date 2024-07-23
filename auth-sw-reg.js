@@ -3,6 +3,8 @@ if ('serviceWorker' in navigator) {
 		try {
 			const reg = await navigator.serviceWorker.register('./auth-sw.js');
 			console.info('ServiceWorker registration successful:', reg);
+			await reg.update();
+			console.info('ServiceWorker registration updated:', reg);
 
 			const set = async (url, header) => {
 				return new Promise((resolve, reject) => {

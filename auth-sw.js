@@ -38,19 +38,19 @@ addEventListener('fetch', async event => {
 	}
 
 	const auth_header_value = auth_header(event.request.url);
+	console.log('auth_header_value:', auth_header_value);
 	if(!auth_header_value) {
 		const response = fetch(event.request);
 		console.log('fetched no auth:', event.request, response);
 		return response;
 	}
 
+	const headers = new Headers(event.request.headers);
+	headers.set('Authorization', auth_header_value);
+	console.log('headers:', Object.fromEntries(headers));
+
 	const request = new Request(event.request, {
-		method: event.request.method,
-		headers: Object.assign({}, event.request.headers, {
-			Authorization: auth_header_value
-		}),
-		mode: 'cors',
-		credentials: event.request.credentials
+		headers
 	});
 
 	const response = await fetch(request);
