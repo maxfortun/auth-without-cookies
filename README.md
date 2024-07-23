@@ -18,7 +18,7 @@ For our purposes we can think of a Service Worker as a proxy for ALL the network
 
 
 ### Third stop: How does the service worker proxy?
-We define a `fetch event` listener, which will intercept the fetch request, add Authroization where needed, and return the response.   
+We define a `fetch event` listener in a separate file `auth-sw.js`, which will intercept the fetch request, add Authroization where needed, and return the response.   
 ```javascript
 addEventListener('fetch', async event => {
 
@@ -27,13 +27,13 @@ addEventListener('fetch', async event => {
 		return fetch(event.request);
 	}
 
-  // If the url does not have an Authorization header at any segment level, no need to do anything else.
+        // If the url does not have an Authorization header at any segment level, no need to do anything else.
 	const auth_header_value = auth_header(event.request.url);
 	if(!auth_header_value) {
 		return fetch(event.request);
 	}
 
-  // We are here because we need to add Authorization header. Let's clone the original request, ad dthe header, and send it on its merry way!
+        // We are here because we need to add Authorization header. Let's clone the original request, ad dthe header, and send it on its merry way!
 	const request = new Request(event.request, {
 		method: event.request.method,
 		headers: Object.assign({}, event.request.headers, {
@@ -46,4 +46,19 @@ addEventListener('fetch', async event => {
 	return fetch(request);
 });
 ```
-That's pretty much all there is to it. We'll plug this nifty service worker into our app at the next stop.
+That's pretty much all there is to it. We'll plug this nifty service worker into our app at the next stop.  
+
+### Fourth stop: How do we start using this proxy?
+This is the simple part. We register the service worker file with th navigator:
+```javascript
+cont registration = await navigator.serviceWorker.register('./auth-sw.js');
+```
+That's all there is to it. This will load the service worker. We could do it in an inline `<script>` tag, but if we want it to be reusable, let's put our code in a separate file `auth-sw-reg.js` and load it via:
+```html
+<script src="auth-sw-reg.js" />
+```
+Just registering the service worker is enough to run it, but how do we tell the service worker which tokens to use? Find out at the next stop.
+
+### Fifth stop: How does service worker know which tokens to add to which requests?
+
+
