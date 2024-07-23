@@ -21,47 +21,45 @@ For our purposes we can think of a Service Worker as a proxy for ALL the network
 We define a `fetch event` listener in a separate file `auth-sw.js`, which will intercept the fetch request, add Authroization where needed, and return the response.   
 ```javascript
 addEventListener('fetch', async event => {
-
 	// If we already have the Authorization header, no need to do anything else.
-	if(event.request.headers.Authorization) {
-		return fetch(event.request);
-	}
+  if(event.request.headers.Authorization) {
+    return fetch(event.request);
+  }
 
-        // If the url does not have an Authorization header at any segment level, no need to do anything else.
-	const auth_header_value = auth_header(event.request.url);
-	if(!auth_header_value) {
-		return fetch(event.request);
-	}
+  // If the url does not have an Authorization header at any segment level, no need to do anything else.
+  const auth_header_value = auth_header(event.request.url);
+  if(!auth_header_value) {
+    return fetch(event.request);
+  }
 
-        // We are here because we need to add Authorization header. Let's clone the original request, ad dthe header, and send it on its merry way!
-	const request = new Request(event.request, {
-		method: event.request.method,
-		headers: Object.assign({}, event.request.headers, {
-			Authorization: auth_header_value
-		}),
-		mode: 'cors',
-		credentials: event.request.credentials
-	});
+  // We are here because we need to add Authorization header. Let's clone the original request, ad dthe header, and send it on its merry way!
+  const request = new Request(event.request, {
+    method: event.request.method,
+    headers: Object.assign({}, event.request.headers, {
+      Authorization: auth_header_value
+    }),
+    mode: 'cors',
+    credentials: event.request.credentials
+  });
 
-	return fetch(request);
+  return fetch(request);
 });
 ```
 
-One little caveat... We do not want to lookup the header by url. We want to lookup the header by the url and all of its ancestors:
+One little caveat... We do not want to lookup the header by url. We want to lookup the header by the url and all of its ancestors, or blank for all.
 
 ```javascript
 const auth_header = url => {
-    const segments = url.split('/');
-    do {
-        const key = segments.join('/');
-        let header = auth_headers[key];
-        console.log('auth_header:', key);
-        if(header) {
-            return header;
-        }
-        segments.pop();
-    } while(segments.length);
-    return auth_headers[''];
+  const segments = url.split('/');
+  do {
+    const key = segments.join('/');
+    let header = auth_headers[key];
+    if(header) {
+      return header;
+    }
+    segments.pop();
+  } while(segments.length);
+  return auth_headers[''];
 };
 ```
 
@@ -83,17 +81,17 @@ First let's define the internal state of the service worker. It will need to kee
 ```javascript
 const auth_headers = {};
 const auth_header_actions = {
-    set: (data) => auth_headers[data.url] = data.header,
-    del: (data) => delete auth_headers[data.url]
+  set: (data) => auth_headers[data.url] = data.header,
+  del: (data) => delete auth_headers[data.url]
 };
 ```
 
 Now we can listen to the `message` events and update the internal state as needed. A message would look something like this:
 ```json
 {
-  action: 'set',
-  url: 'https://example.com/abc/def/index.html',
-  header: 'Bearer abcdef...'
+  "action": "set",
+  "url": "https://example.com/abc/def/index.html",
+  "header": "Bearer abcdef..."
 }
 ```
 
@@ -101,11 +99,11 @@ And we process messages like this:
 
 ```javascript
 addEventListener("message", async event => {
-    const action = auth_header_actions[event.data.action];
-    if(!action) {
-        return;
-    }
-    action(event.data);
+  const action = auth_header_actions[event.data.action];
+  if(!action) {
+    return;
+  }
+  action(event.data);
 });
 ```
 Find out how to send these messages at the next stop.
@@ -122,31 +120,31 @@ One problem here is `postMessage`/`onmessage` mechanisms are asynchronous, and i
 
 On the app side we'll create a global auth service worker access object `window.authSW`, where we'll wrap `postMessage` into a method `set`:
 ```javascript
-    window.addEventListener('load', async () => {
-        try {
-            const reg = await navigator.serviceWorker.register('./auth-sw.js');
+window.addEventListener('load', async () => {
+  try {
+    const reg = await navigator.serviceWorker.register('./auth-sw.js');
 
-            const set = async (url, header) => {
-                return new Promise((resolve, reject) => {
-                    const messageChannel = new MessageChannel();
-                    messageChannel.port1.onmessage = event => {
-                        resolve(event.data);
-                    };
-                    authSW.reg.active.postMessage({ action: 'set', url, header }, [messageChannel.port2]);
-                });
-            };
+    const set = async (url, header) => {
+      return new Promise((resolve, reject) => {
+        const messageChannel = new MessageChannel();
+        messageChannel.port1.onmessage = event => {
+          resolve(event.data);
+        };
+        authSW.reg.active.postMessage({ action: 'set', url, header }, [messageChannel.port2]);
+      });
+    };
 
-            window.authSW = {
-                reg,
-                set
-            };
+    window.authSW = {
+      reg,
+      set
+    };
 
-            window.dispatchEvent(new CustomEvent("authSWLoaded"));
+    window.dispatchEvent(new CustomEvent("authSWLoaded"));
 
-        } catch(e) {
-            console.info('ServiceWorker registration failed:', e);
-        }
-    });
+  } catch(e) {
+    console.info('ServiceWorker registration failed:', e);
+  }
+});
 ```
 And on the service worker side we'll make sure to respond via the message channel:
 ```javascript
