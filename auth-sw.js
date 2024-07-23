@@ -45,12 +45,12 @@ addEventListener('fetch', async event => {
 		return response;
 	}
 
-	const headers = new Headers(event.request.headers);
-	headers.set('Authorization', auth_header_value);
-	console.log('headers:', Object.fromEntries(headers));
-
 	const request = new Request(event.request, {
-		headers
+		mode: 'cors',
+		credentials: 'include',
+		headers: {
+			Authorization: auth_header_value
+		}
 	});
 
 	const response = await fetch(request);
