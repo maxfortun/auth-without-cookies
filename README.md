@@ -21,28 +21,30 @@ For our purposes we can think of a Service Worker as a proxy for ALL the network
 We define a `fetch event` listener in a separate file [auth-sw.js](auth-sw.js), which will intercept the fetch request, add Authroization where needed, and return the response.   
 ```javascript
 addEventListener('fetch', async event => {
-  // If we already have the Authorization header, no need to do anything else.
-  if(event.request.headers.Authorization) {
-    return fetch(event.request);
-  }
+  event.respondWith((async () => {
 
-  // If the url does not have an Authorization header at any segment level, no need to do anything else.
-  const auth_header_value = auth_header(event.request.url);
-  if(!auth_header_value) {
-    return fetch(event.request);
-  }
+    // If we already have the Authorization header, no need to do anything else.
+    if(event.request.headers.Authorization) {
+      return fetch(event.request);
+    }
 
-  // We are here because we need to add Authorization header. Let's clone the original request, ad dthe header, and send it on its merry way!
-  const request = new Request(event.request, {
-    method: event.request.method,
-    headers: Object.assign({}, event.request.headers, {
-      Authorization: auth_header_value
-    }),
-    mode: 'cors',
-    credentials: event.request.credentials
-  });
+    // If the url does not have an Authorization header at any segment level, no need to do anything else.
+    const auth_header_value = auth_header(event.request.url);
+    if(!auth_header_value) {
+      return fetch(event.request);
+    }
 
-  return fetch(request);
+    // We are here because we need to add Authorization header. Let's clone the original request, ad dthe header, and send it on its merry way!
+    const request = new Request(event.request, {
+        mode: 'cors',
+        credentials: 'include',
+        headers: {
+            Authorization: auth_header_value
+        }
+    });
+
+    return fetch(request);
+  })());
 });
 ```
 
