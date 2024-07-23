@@ -175,7 +175,7 @@ const auth_header = async () => {
 };
 ```
 
-We need to load external protect scripts:
+We need to load protected scripts:
 ```javascript
 async function loadScript(options) {
   return new Promise((resolve, reject) => {
